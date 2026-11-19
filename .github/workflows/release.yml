@@ -99,7 +99,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           cd archives/archive-first
-          unzip -p "$TAG.zip" build-info.json > build-info.json
+          unzip -p "$TAG.zip" build-info.json > "$RUNNER_TEMP/build-info.json"
           {
             echo "CPython, NumPy and their licences built for UnrealPy's web (Wasm) target from \`$GITHUB_SHA\`."
             echo
@@ -110,7 +110,7 @@ jobs:
             echo '<details><summary>build-info.json (without the file hashes)</summary>'
             echo
             echo '```json'
-            python3 -c 'import json, sys; info = json.load(open(sys.argv[1])); info.pop("files"); print(json.dumps(info, indent=2))' build-info.json
+            python3 -c 'import json, sys; info = json.load(open(sys.argv[1])); info.pop("files"); print(json.dumps(info, indent=2))' "$RUNNER_TEMP/build-info.json"
             echo '```'
             echo '</details>'
           } > notes.md
