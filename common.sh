@@ -19,8 +19,8 @@ export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-315532800}"  # 1980-01-01, also t
 export PYTHONHASHSEED=0
 export LC_ALL=C
 
-# CPython's Wasm build. pack.sh records these in build-info.json. configure adds -g; build.sh maps the paths
-# in the debug information to the build folder.
+# CPython's Wasm build. pack.sh records these in build-info.json. configure adds -g; build.sh maps $WORK in the
+# debug information's paths to ".".
 CPYTHON_CFLAGS="-O3 -pthread"
 CPYTHON_CONFIGURE=(
   --host=wasm64-unknown-emscripten

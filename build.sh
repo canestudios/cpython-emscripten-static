@@ -46,12 +46,13 @@ if [ -n "${REBUILD:-}" ] || [ ! -f "$HOST/libpython$PY_MINOR.a" ]; then
   mkdir -p "$HOST"
   cd "$HOST"
   # The libraries must not depend on where they were built. configure is called by a relative path, as
-  # getpath.c records the source folder (VPATH), and the debug information maps the build folder to ".".
+  # getpath.c records the source folder (VPATH), and the debug information maps $WORK (the build and emsdk's
+  # sysroot) to ".".
   CONFIG_SITE="$SRC/Tools/wasm/config.site-wasm32-emscripten" \
     emconfigure "../Python-$PYTHON_VERSION/configure" -q "${CPYTHON_CONFIGURE[@]}" \
       --build="$("$SRC/config.guess")" \
       --with-build-python="$NATIVE" \
-      CFLAGS="$CPYTHON_CFLAGS -ffile-prefix-map=$CACHE=." LDFLAGS="-pthread"
+      CFLAGS="$CPYTHON_CFLAGS -ffile-prefix-map=$WORK=." LDFLAGS="-pthread"
   # pybuilddir.txt also writes the Wasm sysconfig data, which build_numpy.sh points Meson at.
   emmake make -s -j"$JOBS" "libpython$PY_MINOR.a" pybuilddir.txt
 fi

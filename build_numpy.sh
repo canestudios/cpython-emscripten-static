@@ -156,6 +156,8 @@ mkdir -p "$OUT/licenses/numpy"
 # The package's Python files, staged with the standard library.
 rm -rf "$OUT/python-stdlib/numpy"
 rsync -a --exclude '*.so' --exclude 'tests/' --exclude '__pycache__' --exclude '*.pyi' "$PKG/" "$OUT/python-stdlib/numpy/"
+# numpy.show_config() reports the compiler arguments, which name this machine's build folders.
+sed -i -e "s#$CACHE#<build>#g" -e "s#$WORK#<work>#g" "$OUT/python-stdlib/numpy/__config__.py"
 echo "NumPy $NUMPY_VERSION for Wasm in $OUT"
 cat "$OUT/numpy-builtins.txt"
 du -sh "$OUT/lib/libnumpy.a" "$OUT/python-stdlib/numpy"

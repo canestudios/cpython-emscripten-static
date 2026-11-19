@@ -28,12 +28,15 @@ mkdir -p "$DIST"
 INFO_TAG="$TAG" INFO_REVISION="$REVISION" INFO_PYTHON="$PYTHON_VERSION" INFO_NUMPY="$NUMPY_VERSION" \
 INFO_EMSDK="$EMSDK_VERSION" INFO_EMSDK_COMMIT="$EMSDK_COMMIT" INFO_EMCC="$(emcc --version | head -1)" \
 INFO_REPOSITORY="${GITHUB_REPOSITORY:-canestudios/cpython-emscripten-static}" INFO_COMMIT="$COMMIT" \
-INFO_MODIFIED="$MODIFIED" INFO_PYMALLOC="$PYMALLOC" INFO_CFLAGS="$CPYTHON_CFLAGS -ffile-prefix-map=<build>=." \
+INFO_MODIFIED="$MODIFIED" INFO_PYMALLOC="$PYMALLOC" INFO_CFLAGS="$CPYTHON_CFLAGS -ffile-prefix-map=<work>=." \
 INFO_CONFIGURE="$(printf '%s\n' "${CPYTHON_CONFIGURE[@]}")" \
 INFO_PYTHON_URL="https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz" \
 INFO_PYTHON_SHA256="$PYTHON_SHA256" INFO_NUMPY_URL="$NUMPY_URL" INFO_NUMPY_SHA256="$NUMPY_SHA256" \
+INFO_FOLDERS="$WORK
+$ROOT" \
 "$NATIVE" - "$OUT" "$DIST/$TAG.zip" "python$PY_NODOT.zip" <<'EOF'
 import hashlib
+import io
 import json
 import os
 import sys
@@ -78,6 +81,15 @@ info = {
     "files": {name: hashlib.sha256((out / name).read_bytes()).hexdigest() for name in members},
 }
 data = {name: (out / name).read_bytes() for name in members}
+# The archive must not depend on where it was built: no file, nor any member of the stdlib zip, may name the
+# build machine's folders.
+folders = [folder.encode() for folder in env["INFO_FOLDERS"].splitlines() if folder]
+contents = dict(data)
+with zipfile.ZipFile(io.BytesIO(data[stdlib])) as zipped:
+    contents.update({f"{stdlib}/{name}": zipped.read(name) for name in zipped.namelist()})
+leaks = sorted(name for name, content in contents.items() if any(folder in content for folder in folders))
+if leaks:
+    sys.exit("These files name the build folders, so the archive depends on where it was built: " + ", ".join(leaks))
 data["build-info.json"] = (json.dumps(info, indent=2) + "\n").encode()
 (out / "build-info.json").write_bytes(data["build-info.json"])
 temporary = target.with_suffix(".part")
