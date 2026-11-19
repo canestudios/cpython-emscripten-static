@@ -10,7 +10,7 @@
 # Emscripten's zlib port the way build.sh compiles bzip2.
 set -euo pipefail
 HARNESS="$(cd "$(dirname "$0")" && pwd)"
-# shellcheck source=../common.sh
+# shellcheck source=common.sh
 source "$HARNESS/../common.sh"
 CPW="$(out_dir "${1:-}")"  # not DIR: emsdk_env.sh uses that name
 [ -f "$CPW/lib/libpython$PY_MINOR.a" ] || { echo "No CPython build in $CPW" >&2; exit 1; }

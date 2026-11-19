@@ -10,7 +10,10 @@ source "$(dirname "$0")/common.sh"
 OUT="$(out_dir "${1:-}")"
 NATIVE="$CACHE/build-native/python"
 HOST="$CACHE/build-wasm"
-[ -x "$NATIVE" ] && [ -d "$HOST/build" ] || { echo "No CPython build in $CACHE: run build.sh first" >&2; exit 1; }
+if [ ! -x "$NATIVE" ] || [ ! -d "$HOST/build" ]; then
+  echo "No CPython build in $CACHE: run build.sh first" >&2
+  exit 1
+fi
 
 activate_emsdk
 
@@ -99,7 +102,7 @@ mkdir -p "$OBJECTS"
 while IFS= read -r target; do
   rel="${target#"$BUILD"/}"
   module="${rel%%.cpython-*}"
-  case "$module" in *_tests|*/tests/*|*/_simd|*/_umath_tests|*/_rational_tests|*/_struct_ufunc_tests|*/_operand_flag_tests) continue ;; esac
+  case "$module" in *_tests|*/tests/*|*/_simd) continue ;; esac  # the test modules (_umath_tests, _rational_tests...)
   dotted="${module//\//.}"
   for object in "$target"/*.o; do
     cp "$object" "$OBJECTS/${dotted//./_}__$(basename "$object")"

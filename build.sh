@@ -56,7 +56,7 @@ fi
 cd "$HOST"
 
 # What the engine links: libpython plus the static libraries its built-in modules use.
-rm -rf "$OUT/include" "$OUT/lib" "$OUT/python-stdlib" "$OUT/licenses"
+rm -rf "${OUT:?}/include" "$OUT/lib" "$OUT/python-stdlib" "$OUT/licenses"
 mkdir -p "$OUT/include/python$PY_MINOR" "$OUT/lib" "$OUT/licenses"
 cp -r "$SRC/Include/." "$OUT/include/python$PY_MINOR/"
 cp pyconfig.h "$OUT/include/python$PY_MINOR/"

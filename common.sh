@@ -1,5 +1,5 @@
 # Shared by the build scripts: the pinned versions, the folders and the helpers. Sourced, not run.
-# shellcheck shell=bash
+# shellcheck shell=bash disable=SC2034  # the scripts that source this file use its variables
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=versions.env
