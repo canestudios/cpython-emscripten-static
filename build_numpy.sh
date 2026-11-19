@@ -145,8 +145,9 @@ cp -r "$PKG/_core/include/numpy" "$OUT/include/numpy"
 # NumPy's licence, and those of the code it bundles, at their paths in the source.
 rm -rf "$OUT/licenses/numpy"
 mkdir -p "$OUT/licenses/numpy"
-(cd "$SRC" && find . -type f \( -iname 'LICENSE*' -o -iname 'COPYING*' \) -not -path './vendored-meson/*' \
-  | sort | while IFS= read -r notice; do
+# Only the package's sources: the build tools (vendored Meson, tempita, spin) and the documentation ship nothing.
+(cd "$SRC" && { printf '%s\n' LICENSE*; find numpy -type f \( -iname 'LICENSE*' -o -iname 'COPYING*' \) \
+  -not -path 'numpy/_build_utils/*'; } | sort | while IFS= read -r notice; do
     mkdir -p "$OUT/licenses/numpy/$(dirname "$notice")"
     cp "$notice" "$OUT/licenses/numpy/$notice"
   done)
