@@ -1,7 +1,8 @@
 name: Release
 
-# A pushed tag builds the archive from clean on two runners, runs the harness on the packed archive, checks the two
-# archives are byte-identical and publishes one as the tag's release. A manual run does the same without publishing.
+# A pushed tag builds the archive from clean on two runners, in different folders, runs the harness on the packed
+# archive, checks the two archives are byte-identical and publishes one as the tag's release. A manual run does the
+# same without publishing.
 on:
   push:
     tags: ["cpython-*"]
@@ -24,11 +25,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        copy: [first, second]
+        include:
+          - copy: first
+            folder: /home/runner/build
+          - copy: second
+            folder: /home/runner/work/_temp/elsewhere
     env:
-      # Both runners use the same folders: CPython's build records its source folder in libpython.
-      WORK: /home/runner/unrealpy-cpython-wasm
-      OUT: /home/runner/unrealpy-cpython-wasm-out
+      # Different folders on each runner: the archive must not depend on where it was built.
+      WORK: ${{ matrix.folder }}/work
+      OUT: ${{ matrix.folder }}/out
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

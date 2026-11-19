@@ -8,7 +8,7 @@ source "$ROOT/versions.env"
 TAG="cpython-${PYTHON_VERSION}_numpy-${NUMPY_VERSION}_emsdk-${EMSDK_VERSION}-r${REVISION}"
 PY_MINOR="${PYTHON_VERSION%.*}"  # 3.11: libpython3.11.a, include/python3.11
 PY_NODOT="${PY_MINOR/./}"        # 311: python311.zip
-WORK="${WORK:-$HOME/.cache/unrealpy-cpython-wasm}"
+WORK="${WORK:-$HOME/.cache/cpython-emscripten-static}"
 # Every build folder of this recipe revision: another tag never reuses them.
 CACHE="$WORK/$TAG"
 JOBS="${JOBS:-$(nproc)}"
@@ -19,7 +19,8 @@ export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-315532800}"  # 1980-01-01, also t
 export PYTHONHASHSEED=0
 export LC_ALL=C
 
-# CPython's Wasm build. pack.sh records these in build-info.json.
+# CPython's Wasm build. pack.sh records these in build-info.json. configure adds -g; build.sh maps the paths
+# in the debug information to the build folder.
 CPYTHON_CFLAGS="-O3 -pthread"
 CPYTHON_CONFIGURE=(
   --host=wasm64-unknown-emscripten

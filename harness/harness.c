@@ -1,8 +1,8 @@
 /*
- * Starts the Wasm CPython the way UnrealPy's web build does (UnrealPyWasm.cpp: NumPy's modules registered as
- * built-ins, an isolated config whose search path is the staged standard library) and runs a check script.
- * Built and run under node by run.sh, with the engine's link settings, to find link and runtime problems
- * without packaging a game. Arguments: the build folder (mounted at /cpw) and the harness folder (/harness).
+ * A minimal host: starts the Wasm CPython the way an embedding program does (NumPy's modules registered as
+ * built-ins, an isolated config whose search path is the standard library zip) and runs a check script.
+ * Built and run under node by run.sh, with Unreal Engine's link settings, to find link and runtime problems
+ * without a real host. Arguments: the build folder (mounted at /cpw) and the harness folder (/harness).
  */
 #include <Python.h>
 #include <emscripten/wasmfs.h>

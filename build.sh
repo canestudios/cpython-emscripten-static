@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Builds CPython as static WebAssembly libraries for UnrealPy's Wasm target, with the Emscripten version the
-# engine's Wasm platform requires. Run on Linux x86_64. The engine builds wasm64 objects only (its link lowers the
-# pointers with -sMEMORY64=2), so CPython is wasm64.
+# Builds CPython as static wasm64 Emscripten libraries for hosts that embed it, with the Emscripten version of
+# versions.env. Run on Linux x86_64. Hosts such as Unreal Engine build wasm64 objects only (their link may lower
+# the pointers with -sMEMORY64=2), so CPython is wasm64.
 #
 #   build.sh [output dir]      default: out/<tag>
 #
 # Output: include/ (Python headers and pyconfig.h), lib/*.a (libpython with the stdlib's C modules built in,
 # and the libraries they need), licenses/ for them, and python-stdlib/ (the pure-Python standard library, which
-# make_zip.sh compiles). Everything is compiled with -pthread: the engine links its Wasm game with shared memory.
-# zlib is not built: the engine links its own (Engine/Platforms/Wasm/Build/ThirdParty/zlib), which the zlib
-# module uses.
+# make_zip.sh compiles). Everything is compiled with -pthread, for hosts that link with shared memory.
+# zlib is not built: the host links its own (Unreal Engine: Engine/Platforms/Wasm/Build/ThirdParty/zlib), which
+# the zlib module uses.
 set -euo pipefail
 # shellcheck source=common.sh
 source "$(dirname "$0")/common.sh"
@@ -45,17 +45,19 @@ if [ -n "${REBUILD:-}" ] || [ ! -f "$HOST/libpython$PY_MINOR.a" ]; then
   rm -rf "$HOST"
   mkdir -p "$HOST"
   cd "$HOST"
+  # The libraries must not depend on where they were built. configure is called by a relative path, as
+  # getpath.c records the source folder (VPATH), and the debug information maps the build folder to ".".
   CONFIG_SITE="$SRC/Tools/wasm/config.site-wasm32-emscripten" \
-    emconfigure "$SRC/configure" -q "${CPYTHON_CONFIGURE[@]}" \
+    emconfigure "../Python-$PYTHON_VERSION/configure" -q "${CPYTHON_CONFIGURE[@]}" \
       --build="$("$SRC/config.guess")" \
       --with-build-python="$NATIVE" \
-      CFLAGS="$CPYTHON_CFLAGS" LDFLAGS="-pthread"
+      CFLAGS="$CPYTHON_CFLAGS -ffile-prefix-map=$CACHE=." LDFLAGS="-pthread"
   # pybuilddir.txt also writes the Wasm sysconfig data, which build_numpy.sh points Meson at.
   emmake make -s -j"$JOBS" "libpython$PY_MINOR.a" pybuilddir.txt
 fi
 cd "$HOST"
 
-# What the engine links: libpython plus the static libraries its built-in modules use.
+# What a host links: libpython plus the static libraries its built-in modules use.
 rm -rf "${OUT:?}/include" "${OUT:?}/lib" "${OUT:?}/python-stdlib" "${OUT:?}/licenses"
 mkdir -p "$OUT/include/python$PY_MINOR" "$OUT/lib" "$OUT/licenses"
 cp -r "$SRC/Include/." "$OUT/include/python$PY_MINOR/"

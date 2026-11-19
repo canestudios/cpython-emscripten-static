@@ -1,4 +1,4 @@
-unrealpy-cpython-wasm
+cpython-emscripten-static
 
 The build scripts in this repository are under the MIT licence (LICENSE).
 

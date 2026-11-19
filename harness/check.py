@@ -1,5 +1,5 @@
-"""What UnrealPy's web build needs from its Python: the standard library modules the `ue` package and the
-game import, NumPy (math structs are ndarrays), threads, and reading a folder of files."""
+"""What an embedding host typically needs from its Python: common standard library modules, NumPy, threads,
+and reading a folder of files. UnrealPy's web build, the reference host, uses all of them."""
 
 import hashlib
 import json

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Links harness.c against the Wasm CPython and NumPy with the engine's link settings (WasmToolChain.cs:
-# GetEmscriptenLinkArguments), then runs check.py under node. It finds link and runtime problems without
-# packaging a game.
+# Links harness.c against the Wasm CPython and NumPy with the link settings of Unreal Engine 5.9's Wasm platform
+# (WasmToolChain.cs: GetEmscriptenLinkArguments), a demanding host, then runs check.py under node. It finds link
+# and runtime problems without a real host.
 #
 #   run.sh [build dir]      a build's output folder or an unpacked release archive; default: out/<tag>
 #
-# The engine links its own wasm64 zlib. ZLIB=<path to libz.a> links that one, for example
+# The host links its own wasm64 zlib. ZLIB=<path to libz.a> links that one, for example Unreal Engine's
 # "$ENGINE/Platforms/Wasm/Build/ThirdParty/zlib/wasm64/libz.a"; without it, a stand-in is compiled from
 # Emscripten's zlib port the way build.sh compiles bzip2.
 set -euo pipefail

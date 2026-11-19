@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Builds NumPy for UnrealPy's Wasm target, statically: Emscripten turns each extension module ("-shared")
-# into a relocatable object, and they are archived into lib/libnumpy.a. UnrealPy registers their PyInit_*
-# functions as built-in modules (include/numpy_builtins.inl lists them) before Python starts. Run after build.sh.
+# Builds NumPy as static wasm64 Emscripten libraries: Emscripten turns each extension module ("-shared") into a
+# relocatable object, and they are archived into lib/libnumpy.a. A host registers their PyInit_* functions as
+# built-in modules (include/numpy_builtins.inl lists them) before Python starts. Run after build.sh.
 #
 #   build_numpy.sh [output dir]      default: out/<tag>
 set -euo pipefail
@@ -93,7 +93,7 @@ PKG="$(dirname "$(find "$CACHE/numpy-install" -name '__init__.py' -path '*/numpy
 [ -f "$PKG/__init__.py" ] || { echo "meson install produced no numpy package" >&2; exit 1; }
 mkdir -p "$OUT/lib"
 rm -f "$OUT"/lib/libnumpy*.a "$OUT/numpy-builtins.txt"
-# The engine links statically, so the extension modules' compiled objects are archived, not their .so files.
+# Hosts link statically, so the extension modules' compiled objects are archived, not their .so files.
 # Modules share sources (lapack_lite's are compiled into lapack_lite and _umath_linalg): members are named per
 # module, so both copies stay in the archive and the linker pulls only the first one a symbol needs.
 OBJECTS="$CACHE/numpy-objects"
@@ -130,8 +130,8 @@ for lib in "$OUT"/lib/*.a; do
   [ "$(head -c 7 "$lib")" != '!<thin>' ] || { echo "$lib is a thin archive" >&2; exit 1; }
 done
 
-# NumPy's C headers as configured for Wasm (UnrealPy's math arrays compile against them), and the table of
-# built-in modules UnrealPy registers.
+# NumPy's C headers as configured for Wasm (for host code that uses NumPy's C API), and the table of built-in
+# modules a host registers.
 rm -rf "$OUT/include/numpy"
 cp -r "$PKG/_core/include/numpy" "$OUT/include/numpy"
 {
