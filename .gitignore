@@ -1,3 +1,4 @@
-# Build outputs and release archives (build.sh ... pack.sh).
+# Build outputs and release archives (build.sh ... pack.sh), and Python caches.
 /out/
 /dist/
+__pycache__/
