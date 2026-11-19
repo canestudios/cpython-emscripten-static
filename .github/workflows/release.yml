@@ -1,0 +1,118 @@
+name: Release
+
+# A pushed tag builds the archive from clean on two runners, runs the harness on the packed archive, checks the two
+# archives are byte-identical and publishes one as the tag's release. A manual run does the same without publishing.
+on:
+  push:
+    tags: ["cpython-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build (${{ matrix.copy }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        copy: [first, second]
+    env:
+      # Both runners use the same folders: CPython's build records its source folder in libpython.
+      WORK: /home/runner/unrealpy-cpython-wasm
+      OUT: /home/runner/unrealpy-cpython-wasm-out
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tag matches versions.env
+        if: github.ref_type == 'tag'
+        run: |
+          source common.sh
+          if [ "$GITHUB_REF_NAME" != "$TAG" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME, but versions.env names $TAG."
+            exit 1
+          fi
+      - name: Host packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential libssl-dev zlib1g-dev rsync unzip
+      - name: CPython
+        run: bash build.sh "$OUT"
+      - name: NumPy
+        run: bash build_numpy.sh "$OUT"
+      - name: Standard library zip
+        run: bash make_zip.sh "$OUT"
+      - name: Pack
+        run: bash pack.sh "$OUT" dist
+      - name: Harness on the packed archive
+        run: |
+          unpacked="$RUNNER_TEMP/unpacked"
+          mkdir "$unpacked"
+          unzip -q dist/*.zip -d "$unpacked"
+          bash harness/run.sh "$unpacked"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: archive-${{ matrix.copy }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Compare and publish
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: archives
+      - name: Byte-identical builds
+        run: |
+          first=(archives/archive-first/*.zip)
+          second=(archives/archive-second/*.zip)
+          if cmp "${first[0]}" "${second[0]}"; then
+            echo "The two builds are byte-identical." >> "$GITHUB_STEP_SUMMARY"
+            cat archives/archive-first/SHA256SUMS >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          mkdir first second
+          unzip -q "${first[0]}" -d first
+          unzip -q "${second[0]}" -d second
+          echo "::error::The two builds differ:"
+          diff -rq first second || true
+          exit 1
+      - name: Publish the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cd archives/archive-first
+          unzip -p "$TAG.zip" build-info.json > build-info.json
+          {
+            echo "CPython, NumPy and their licences built for UnrealPy's web (Wasm) target from \`$GITHUB_SHA\`."
+            echo
+            echo '```'
+            cat SHA256SUMS
+            echo '```'
+            echo
+            echo '<details><summary>build-info.json (without the file hashes)</summary>'
+            echo
+            echo '```json'
+            python3 -c 'import json, sys; info = json.load(open(sys.argv[1])); info.pop("files"); print(json.dumps(info, indent=2))' build-info.json
+            echo '```'
+            echo '</details>'
+          } > notes.md
+          gh release create "$TAG" "$TAG.zip" SHA256SUMS --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$TAG" --notes-file notes.md

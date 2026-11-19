@@ -1,0 +1,7 @@
+# The tools build_numpy.sh installs to compile NumPy, on the native interpreter of build.sh (Linux x86_64 wheels).
+# NumPy's build runs its own vendored Meson, so neither Meson nor meson-python comes from here.
+cython==3.3.1 \
+    --hash=sha256:26a28e0ca5dffe9c7d69d1e3a0f78cb74f41b2b6b40771f620262a5d04862a00 \
+    --hash=sha256:61abc7feedd20dac6c4ff7ab3a30e17136a067b242ab9253e2b4a6d9a72c2b61
+ninja==1.13.2 \
+    --hash=sha256:65a24341b5ac09fcadcc37082660be40a94174e51a937fabf6e2cae26225fa2c

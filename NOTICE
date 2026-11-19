@@ -1,0 +1,14 @@
+unrealpy-cpython-wasm
+
+The build scripts in this repository are under the MIT licence (LICENSE).
+
+The release archives the scripts produce contain third-party software. Each archive carries the full licence
+texts in its licenses/ folder:
+
+- CPython 3.11, Python Software Foundation License Version 2 (licenses/cpython/LICENSE). CPython's notices for
+  the code it bundles are in licenses/cpython/license.rst.
+- NumPy, BSD 3-Clause License (licenses/numpy/LICENSE.txt), and the licences of the code NumPy bundles, at their
+  paths in NumPy's source (licenses/numpy/).
+- Expat, MIT License (licenses/expat/COPYING).
+- libmpdec, BSD 2-Clause License (licenses/libmpdec/LICENSE).
+- bzip2, the bzip2 licence (licenses/bzip2/LICENSE).

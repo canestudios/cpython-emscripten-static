@@ -1,0 +1,3 @@
+# Build outputs and release archives (build.sh ... pack.sh).
+/out/
+/dist/
